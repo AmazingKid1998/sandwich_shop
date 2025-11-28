@@ -44,13 +44,11 @@ void main() {
     await tester.pump(); // start SnackBar animation
     await tester.pump(const Duration(milliseconds: 500)); // let it appear
 
-    // Look for part of the confirmation message
+    // Look for the full confirmation message text in the SnackBar
     expect(
-      find.textContaining('Added 1'),
-      findsOneWidget,
-    );
-    expect(
-      find.textContaining('Veggie Delight'),
+      find.text(
+        'Added 1 footlong Veggie Delight sandwich(es) on white bread to cart',
+      ),
       findsOneWidget,
     );
   });
