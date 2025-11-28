@@ -72,10 +72,22 @@ class _OrderScreenState extends State<OrderScreen> {
         sizeText = 'six-inch';
       }
 
-      String confirmationMessage =
+      final String confirmationMessage =
           'Added $_quantity $sizeText ${sandwich.name} sandwich(es) on ${_selectedBreadType.name} bread to cart';
 
+      // Still useful in debug console
       debugPrint(confirmationMessage);
+
+      // NEW: show confirmation in the UI using a SnackBar
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            confirmationMessage,
+            style: normalText,
+          ),
+          duration: const Duration(seconds: 2),
+        ),
+      );
     }
   }
 
@@ -87,27 +99,32 @@ class _OrderScreenState extends State<OrderScreen> {
   }
 
   List<DropdownMenuEntry<SandwichType>> _buildSandwichTypeEntries() {
-    List<DropdownMenuEntry<SandwichType>> entries = [];
-    for (SandwichType type in SandwichType.values) {
-      Sandwich sandwich =
-          Sandwich(type: type, isFootlong: true, breadType: BreadType.white);
-      DropdownMenuEntry<SandwichType> entry = DropdownMenuEntry<SandwichType>(
-        value: type,
-        label: sandwich.name,
+    final List<DropdownMenuEntry<SandwichType>> entries = [];
+    for (final SandwichType type in SandwichType.values) {
+      final Sandwich sandwich = Sandwich(
+        type: type,
+        isFootlong: true,
+        breadType: BreadType.white,
       );
-      entries.add(entry);
+      entries.add(
+        DropdownMenuEntry<SandwichType>(
+          value: type,
+          label: sandwich.name,
+        ),
+      );
     }
     return entries;
   }
 
   List<DropdownMenuEntry<BreadType>> _buildBreadTypeEntries() {
-    List<DropdownMenuEntry<BreadType>> entries = [];
-    for (BreadType bread in BreadType.values) {
-      DropdownMenuEntry<BreadType> entry = DropdownMenuEntry<BreadType>(
-        value: bread,
-        label: bread.name,
+    final List<DropdownMenuEntry<BreadType>> entries = [];
+    for (final BreadType bread in BreadType.values) {
+      entries.add(
+        DropdownMenuEntry<BreadType>(
+          value: bread,
+          label: bread.name,
+        ),
       );
-      entries.add(entry);
     }
     return entries;
   }
@@ -275,7 +292,7 @@ class StyledButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    ButtonStyle myButtonStyle = ElevatedButton.styleFrom(
+    final ButtonStyle myButtonStyle = ElevatedButton.styleFrom(
       backgroundColor: backgroundColor,
       foregroundColor: Colors.white,
       textStyle: normalText,
