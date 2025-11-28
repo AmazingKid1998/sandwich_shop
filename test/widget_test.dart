@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:sandwich_shop/main.dart';
+import 'package:sandwich_shop/repositories/pricing_repository.dart';
 
 void main() {
   testWidgets('shows app bar title', (WidgetTester tester) async {
@@ -63,5 +64,32 @@ void main() {
 
     // onPressed should be null when disabled
     expect(elevatedButton.onPressed, isNull);
+  });
+
+  testWidgets('cart summary updates when item is added',
+      (WidgetTester tester) async {
+    await tester.pumpWidget(const App());
+
+    // Initial summary: empty cart
+    expect(find.text('Items in cart: 0'), findsOneWidget);
+    expect(find.text('Cart total: £0.00'), findsOneWidget);
+
+    // Tap "Add to Cart" (default quantity is 1, footlong Veggie Delight)
+    await tester.tap(find.text('Add to Cart'));
+    await tester.pump();
+
+    // Compute expected price using the same PricingRepository logic
+    final pricingRepository = PricingRepository();
+    final expectedPrice = pricingRepository.calculatePrice(
+      quantity: 1,
+      isFootlong: true,
+    );
+
+    // Summary should now show updated values
+    expect(find.text('Items in cart: 1'), findsOneWidget);
+    expect(
+      find.text('Cart total: £${expectedPrice.toStringAsFixed(2)}'),
+      findsOneWidget,
+    );
   });
 }
