@@ -75,10 +75,10 @@ class _OrderScreenState extends State<OrderScreen> {
       final String confirmationMessage =
           'Added $_quantity $sizeText ${sandwich.name} sandwich(es) on ${_selectedBreadType.name} bread to cart';
 
-      // Still useful in debug console
+      // Debug console
       debugPrint(confirmationMessage);
 
-      // NEW: show confirmation in the UI using a SnackBar
+      // Show confirmation in UI
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(
@@ -260,6 +260,28 @@ class _OrderScreenState extends State<OrderScreen> {
                   ),
                 ],
               ),
+              const SizedBox(height: 20),
+
+              // 🔽 NEW: permanent cart summary
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 16.0),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Text('Cart summary', style: heading2),
+                    const SizedBox(height: 4),
+                    Text(
+                      'Items in cart: ${_cart.totalQuantity}',
+                      style: normalText,
+                    ),
+                    Text(
+                      'Cart total: £${_cart.totalPrice.toStringAsFixed(2)}',
+                      style: normalText,
+                    ),
+                  ],
+                ),
+              ),
+
               const SizedBox(height: 20),
               StyledButton(
                 onPressed: _getAddToCartCallback(),
