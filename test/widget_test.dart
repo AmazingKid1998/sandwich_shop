@@ -16,8 +16,12 @@ void main() {
     // Initial quantity should be 1
     expect(find.text('1'), findsOneWidget);
 
+    // Find the + icon and make sure it is visible on screen
+    final plusFinder = find.byIcon(Icons.add);
+    await tester.ensureVisible(plusFinder);
+
     // Tap the + icon
-    await tester.tap(find.byIcon(Icons.add));
+    await tester.tap(plusFinder);
     await tester.pump();
 
     // Quantity should now be 2
@@ -31,8 +35,12 @@ void main() {
     // Make sure quantity is non-zero (default is 1)
     expect(find.text('1'), findsOneWidget);
 
+    // Find the "Add to Cart" button text and ensure it is visible
+    final addToCartTextFinder = find.text('Add to Cart');
+    await tester.ensureVisible(addToCartTextFinder);
+
     // Tap the "Add to Cart" button
-    await tester.tap(find.text('Add to Cart'));
+    await tester.tap(addToCartTextFinder);
     await tester.pump(); // start SnackBar animation
     await tester.pump(const Duration(milliseconds: 500)); // let it appear
 
@@ -51,16 +59,24 @@ void main() {
       (WidgetTester tester) async {
     await tester.pumpWidget(const App());
 
+    // Find the - icon and ensure it is visible
+    final minusFinder = find.byIcon(Icons.remove);
+    await tester.ensureVisible(minusFinder);
+
     // Decrease quantity to 0
-    await tester.tap(find.byIcon(Icons.remove));
+    await tester.tap(minusFinder);
     await tester.pump();
 
+    // Quantity text should show 0
     expect(find.text('0'), findsOneWidget);
 
     // Get the ElevatedButton that has "Add to Cart" text
-    final elevatedButton = tester.widget<ElevatedButton>(
-      find.widgetWithText(ElevatedButton, 'Add to Cart'),
-    );
+    final addToCartButtonFinder =
+        find.widgetWithText(ElevatedButton, 'Add to Cart');
+    await tester.ensureVisible(addToCartButtonFinder);
+
+    final elevatedButton =
+        tester.widget<ElevatedButton>(addToCartButtonFinder);
 
     // onPressed should be null when disabled
     expect(elevatedButton.onPressed, isNull);
@@ -75,7 +91,9 @@ void main() {
     expect(find.text('Cart total: £0.00'), findsOneWidget);
 
     // Tap "Add to Cart" (default quantity is 1, footlong Veggie Delight)
-    await tester.tap(find.text('Add to Cart'));
+    final addToCartTextFinder = find.text('Add to Cart');
+    await tester.ensureVisible(addToCartTextFinder);
+    await tester.tap(addToCartTextFinder);
     await tester.pump();
 
     // Compute expected price using the same PricingRepository logic
