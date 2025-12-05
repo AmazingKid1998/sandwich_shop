@@ -36,6 +36,14 @@ class _CartScreenState extends State<CartScreen> {
       isFootlong: sandwich.isFootlong,
     );
   }
+    double _calculateItemPrice(Sandwich sandwich, int quantity) {
+    PricingRepository repo = PricingRepository();
+    return repo.calculatePrice(
+      quantity: quantity,
+      isFootlong: sandwich.isFootlong,
+    );
+  }
+
 
   @override
   Widget build(BuildContext context) {
