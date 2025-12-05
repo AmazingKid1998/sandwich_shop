@@ -234,20 +234,3 @@ To reduce redundancy, create a reusable drawer widget (`AppDrawer`) and include 
 3. [x] Add drawer to all relevant screens.
 4. [x] Update/add widget tests for drawer navigation.
 
----
-
-## 6. Optional Advanced Tasks (Not Required for Sign-Off)
-
-### 6.1. go_router Deep Linking
-
-- [ ] Add `go_router`.
-- [ ] Refactor to use `MaterialApp.router`.
-- [ ] Define routes for `/`, `/cart`, `/profile`.
-- [ ] Verify direct URL navigation on web.
-
-### 6.2. Settings + shared_preferences
-
-- [ ] Add `shared_preferences`.
-- [ ] Implement Settings screen.
-- [ ] Persist at least one preference (e.g., dark mode).
-- [ ] Load and apply preference on app restart.
