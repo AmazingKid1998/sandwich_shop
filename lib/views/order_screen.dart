@@ -17,64 +17,53 @@ class OrderScreen extends StatefulWidget {
 
 class _OrderScreenState extends State<OrderScreen> {
   final Cart _cart = Cart();
-  final TextEditingController _notesController = TextEditingController();
 
   SandwichType _selectedSandwichType = SandwichType.veggieDelight;
   bool _isFootlong = true;
   BreadType _selectedBreadType = BreadType.white;
   int _quantity = 1;
 
-  @override
-  void initState() {
-    super.initState();
-    _notesController.addListener(() {
-      setState(() {});
-    });
-  }
-
-  @override
-  void dispose() {
-    _notesController.dispose();
-    super.dispose();
-  }
-
+  /// Worksheet 6 mapping:
+  /// - This keeps the Order screen compatible with the updated Cart model
+  ///   where add() adds one item at a time.
   void _addToCart() {
-    if (_quantity > 0) {
-      final Sandwich sandwich = Sandwich(
-        type: _selectedSandwichType,
-        isFootlong: _isFootlong,
-        breadType: _selectedBreadType,
-      );
+    if (_quantity < 1) return;
 
-      setState(() {
-        _cart.add(sandwich, quantity: _quantity);
-      });
+    final Sandwich sandwich = Sandwich(
+      type: _selectedSandwichType,
+      isFootlong: _isFootlong,
+      breadType: _selectedBreadType,
+    );
 
-      String sizeText;
-      if (_isFootlong) {
-        sizeText = 'footlong';
-      } else {
-        sizeText = 'six-inch';
+    setState(() {
+      // Updated to match Cart.add(Sandwich) signature (no quantity param)
+      for (int i = 0; i < _quantity; i++) {
+        _cart.add(sandwich);
       }
-      String confirmationMessage =
-          'Added $_quantity $sizeText ${sandwich.name} sandwich(es) on ${_selectedBreadType.name} bread to cart';
+    });
 
-      ScaffoldMessengerState scaffoldMessenger = ScaffoldMessenger.of(context);
-      SnackBar snackBar = SnackBar(
+    final String sizeText = _isFootlong ? 'footlong' : 'six-inch';
+    final String confirmationMessage =
+        'Added $_quantity $sizeText ${sandwich.name} sandwich(es) on '
+        '${_selectedBreadType.name} bread to cart';
+
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
         content: Text(confirmationMessage),
         duration: const Duration(seconds: 2),
-      );
-      scaffoldMessenger.showSnackBar(snackBar);
-    }
+      ),
+    );
   }
 
   VoidCallback? _getAddToCartCallback() {
-    if (_quantity > 0) {
+    if (_quantity >= 1) {
       return _addToCart;
     }
     return null;
   }
 
+  /// Worksheet 6 mapping:
+  /// - Basic navigation to CartScreen
   void _navigateToCartView() {
     Navigator.push(
       context,
@@ -89,11 +78,13 @@ class _OrderScreenState extends State<OrderScreen> {
     for (SandwichType type in SandwichType.values) {
       Sandwich sandwich =
           Sandwich(type: type, isFootlong: true, breadType: BreadType.white);
-      DropdownMenuEntry<SandwichType> entry = DropdownMenuEntry<SandwichType>(
-        value: type,
-        label: sandwich.name,
+
+      entries.add(
+        DropdownMenuEntry<SandwichType>(
+          value: type,
+          label: sandwich.name,
+        ),
       );
-      entries.add(entry);
     }
     return entries;
   }
@@ -101,11 +92,12 @@ class _OrderScreenState extends State<OrderScreen> {
   List<DropdownMenuEntry<BreadType>> _buildBreadTypeEntries() {
     List<DropdownMenuEntry<BreadType>> entries = [];
     for (BreadType bread in BreadType.values) {
-      DropdownMenuEntry<BreadType> entry = DropdownMenuEntry<BreadType>(
-        value: bread,
-        label: bread.name,
+      entries.add(
+        DropdownMenuEntry<BreadType>(
+          value: bread,
+          label: bread.name,
+        ),
       );
-      entries.add(entry);
     }
     return entries;
   }
@@ -119,8 +111,23 @@ class _OrderScreenState extends State<OrderScreen> {
     return sandwich.image;
   }
 
+  void _decrementQty() {
+    if (_quantity > 1) {
+      setState(() => _quantity--);
+    }
+  }
+
+  void _incrementQty() {
+    if (_quantity < widget.maxQuantity) {
+      setState(() => _quantity++);
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
+    final bool canDecrement = _quantity > 1;
+    final bool canIncrement = _quantity < widget.maxQuantity;
+
     return Scaffold(
       appBar: AppBar(
         leading: Padding(
@@ -156,6 +163,8 @@ class _OrderScreenState extends State<OrderScreen> {
                 ),
               ),
               const SizedBox(height: 20),
+
+              // Sandwich type dropdown
               DropdownMenu<SandwichType>(
                 width: double.infinity,
                 label: const Text('Sandwich Type'),
@@ -169,6 +178,8 @@ class _OrderScreenState extends State<OrderScreen> {
                 dropdownMenuEntries: _buildSandwichTypeEntries(),
               ),
               const SizedBox(height: 20),
+
+              // Size toggle
               Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
@@ -181,6 +192,8 @@ class _OrderScreenState extends State<OrderScreen> {
                 ],
               ),
               const SizedBox(height: 20),
+
+              // Bread type dropdown
               DropdownMenu<BreadType>(
                 width: double.infinity,
                 label: const Text('Bread Type'),
@@ -194,38 +207,52 @@ class _OrderScreenState extends State<OrderScreen> {
                 dropdownMenuEntries: _buildBreadTypeEntries(),
               ),
               const SizedBox(height: 20),
+
+              // Quantity controls
               Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   const Text('Quantity: ', style: normalText),
                   IconButton(
-                    onPressed: _quantity > 0
-                        ? () => setState(() => _quantity--)
-                        : null,
+                    onPressed: canDecrement ? _decrementQty : null,
                     icon: const Icon(Icons.remove),
                   ),
                   Text('$_quantity', style: heading2),
                   IconButton(
-                    onPressed: () => setState(() => _quantity++),
+                    onPressed: canIncrement ? _incrementQty : null,
                     icon: const Icon(Icons.add),
                   ),
                 ],
               ),
+              const SizedBox(height: 8),
+              Text(
+                'Max per add: ${widget.maxQuantity}',
+                style: normalText,
+                textAlign: TextAlign.center,
+              ),
               const SizedBox(height: 20),
+
+              // Add to cart
               StyledButton(
+                key: const ValueKey('add_to_cart_button'),
                 onPressed: _getAddToCartCallback(),
                 icon: Icons.add_shopping_cart,
                 label: 'Add to Cart',
                 backgroundColor: Colors.green,
               ),
               const SizedBox(height: 20),
+
+              // View cart
               StyledButton(
+                key: const ValueKey('view_cart_button'),
                 onPressed: _navigateToCartView,
                 icon: Icons.shopping_cart,
                 label: 'View Cart',
                 backgroundColor: Colors.blue,
               ),
               const SizedBox(height: 20),
+
+              // Cart summary
               Text(
                 'Cart: ${_cart.countOfItems} items - £${_cart.totalPrice.toStringAsFixed(2)}',
                 style: normalText,
@@ -240,13 +267,12 @@ class _OrderScreenState extends State<OrderScreen> {
   }
 }
 
+/// Local StyledButton used by this screen only.
+/// This keeps your project working without needing styled_button.dart.
 class StyledButton extends StatelessWidget {
   final VoidCallback? onPressed;
-
   final IconData icon;
-
   final String label;
-
   final Color backgroundColor;
 
   const StyledButton({
@@ -259,21 +285,20 @@ class StyledButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    ButtonStyle myButtonStyle = ElevatedButton.styleFrom(
+    final ButtonStyle myButtonStyle = ElevatedButton.styleFrom(
       backgroundColor: backgroundColor,
       foregroundColor: Colors.white,
       textStyle: normalText,
+      padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 12),
     );
 
-    return ElevatedButton(
-      onPressed: onPressed,
-      style: myButtonStyle,
-      child: Row(
-        children: [
-          Icon(icon),
-          const SizedBox(width: 8),
-          Text(label),
-        ],
+    return SizedBox(
+      width: double.infinity,
+      child: ElevatedButton.icon(
+        onPressed: onPressed,
+        style: myButtonStyle,
+        icon: Icon(icon),
+        label: Text(label),
       ),
     );
   }
