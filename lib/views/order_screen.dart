@@ -24,8 +24,8 @@ class _OrderScreenState extends State<OrderScreen> {
   int _quantity = 1;
 
   /// Worksheet 6 mapping:
-  /// - This keeps the Order screen compatible with the updated Cart model
-  ///   where add() adds one item at a time.
+  /// - Keeps Order screen compatible with Cart.add(Sandwich)
+  ///   (one-at-a-time).
   void _addToCart() {
     if (_quantity < 1) return;
 
@@ -36,7 +36,6 @@ class _OrderScreenState extends State<OrderScreen> {
     );
 
     setState(() {
-      // Updated to match Cart.add(Sandwich) signature (no quantity param)
       for (int i = 0; i < _quantity; i++) {
         _cart.add(sandwich);
       }
@@ -56,14 +55,12 @@ class _OrderScreenState extends State<OrderScreen> {
   }
 
   VoidCallback? _getAddToCartCallback() {
-    if (_quantity >= 1) {
-      return _addToCart;
-    }
-    return null;
+    return _quantity >= 1 ? _addToCart : null;
   }
 
   /// Worksheet 6 mapping:
-  /// - Basic navigation to CartScreen
+  /// - Basic navigation to CartScreen.
+  /// - Passes the shared Cart instance forward.
   void _navigateToCartView() {
     Navigator.push(
       context,
@@ -74,9 +71,9 @@ class _OrderScreenState extends State<OrderScreen> {
   }
 
   List<DropdownMenuEntry<SandwichType>> _buildSandwichTypeEntries() {
-    List<DropdownMenuEntry<SandwichType>> entries = [];
+    final List<DropdownMenuEntry<SandwichType>> entries = [];
     for (SandwichType type in SandwichType.values) {
-      Sandwich sandwich =
+      final Sandwich sandwich =
           Sandwich(type: type, isFootlong: true, breadType: BreadType.white);
 
       entries.add(
@@ -90,7 +87,7 @@ class _OrderScreenState extends State<OrderScreen> {
   }
 
   List<DropdownMenuEntry<BreadType>> _buildBreadTypeEntries() {
-    List<DropdownMenuEntry<BreadType>> entries = [];
+    final List<DropdownMenuEntry<BreadType>> entries = [];
     for (BreadType bread in BreadType.values) {
       entries.add(
         DropdownMenuEntry<BreadType>(
@@ -147,6 +144,7 @@ class _OrderScreenState extends State<OrderScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
+              // Current sandwich image
               SizedBox(
                 height: 300,
                 child: Image.asset(
@@ -258,6 +256,20 @@ class _OrderScreenState extends State<OrderScreen> {
                 style: normalText,
                 textAlign: TextAlign.center,
               ),
+              const SizedBox(height: 10),
+
+              // Worksheet 6 Exercise: temporary links at bottom
+              TextButton(
+                key: const ValueKey('open_profile_link'),
+                onPressed: () => Navigator.pushNamed(context, '/profile'),
+                child: const Text('View Profile', style: normalText),
+              ),
+              TextButton(
+                key: const ValueKey('open_about_link'),
+                onPressed: () => Navigator.pushNamed(context, '/about'),
+                child: const Text('About Us', style: normalText),
+              ),
+
               const SizedBox(height: 20),
             ],
           ),
@@ -267,8 +279,8 @@ class _OrderScreenState extends State<OrderScreen> {
   }
 }
 
-/// Local StyledButton used by this screen only.
-/// This keeps your project working without needing styled_button.dart.
+/// Local StyledButton for this screen.
+/// Avoids dependency on a separate styled_button.dart file.
 class StyledButton extends StatelessWidget {
   final VoidCallback? onPressed;
   final IconData icon;
