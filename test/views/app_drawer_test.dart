@@ -8,10 +8,10 @@ class _HomeScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return const Scaffold(
-      appBar: AppBar(title: Text('HOME')),
-      drawer: AppDrawer(),
-      body: Center(child: Text('HOME_BODY')),
+    return Scaffold(
+      appBar: AppBar(title: const Text('HOME')),
+      drawer: const AppDrawer(),
+      body: const Center(child: Text('HOME_BODY')),
     );
   }
 }
@@ -21,10 +21,10 @@ class _CartScreenDummy extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return const Scaffold(
-      appBar: AppBar(title: Text('CART')),
-      drawer: AppDrawer(),
-      body: Center(child: Text('CART_BODY')),
+    return Scaffold(
+      appBar: AppBar(title: const Text('CART')),
+      drawer: const AppDrawer(),
+      body: const Center(child: Text('CART_BODY')),
     );
   }
 }
@@ -34,10 +34,10 @@ class _ProfileScreenDummy extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return const Scaffold(
-      appBar: AppBar(title: Text('PROFILE')),
-      drawer: AppDrawer(),
-      body: Center(child: Text('PROFILE_BODY')),
+    return Scaffold(
+      appBar: AppBar(title: const Text('PROFILE')),
+      drawer: const AppDrawer(),
+      body: const Center(child: Text('PROFILE_BODY')),
     );
   }
 }
@@ -47,10 +47,10 @@ class _AboutScreenDummy extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return const Scaffold(
-      appBar: AppBar(title: Text('ABOUT')),
-      drawer: AppDrawer(),
-      body: Center(child: Text('ABOUT_BODY')),
+    return Scaffold(
+      appBar: AppBar(title: const Text('ABOUT')),
+      drawer: const AppDrawer(),
+      body: const Center(child: Text('ABOUT_BODY')),
     );
   }
 }
@@ -70,7 +70,6 @@ void main() {
     }
 
     Future<void> _openDrawer(WidgetTester tester) async {
-      // The default tooltip used by Flutter for opening drawers
       final openMenu = find.byTooltip('Open navigation menu');
       expect(openMenu, findsOneWidget);
 
