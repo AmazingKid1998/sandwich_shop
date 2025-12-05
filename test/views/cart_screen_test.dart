@@ -1,142 +1,131 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:sandwich_shop/views/cart_screen.dart';
-import 'package:sandwich_shop/views/order_screen.dart';
+
 import 'package:sandwich_shop/models/cart.dart';
 import 'package:sandwich_shop/models/sandwich.dart';
+import 'package:sandwich_shop/views/cart_screen.dart';
+
+Sandwich _testSandwich({bool isFootlong = false}) {
+  return Sandwich(
+    type: SandwichType.veggieDelight,
+    isFootlong: isFootlong,
+    breadType: BreadType.white,
+  );
+}
 
 void main() {
-  group('CartScreen', () {
-    testWidgets('displays empty cart message when cart is empty',
+  group('CartScreen - Worksheet 6', () {
+    testWidgets('Shows empty state when cart is empty',
         (WidgetTester tester) async {
-      final Cart emptyCart = Cart();
-      final CartScreen cartScreen = CartScreen(cart: emptyCart);
-      final MaterialApp app = MaterialApp(
-        home: cartScreen,
+      final cart = Cart();
+
+      await tester.pumpWidget(
+        MaterialApp(
+          home: CartScreen(cart: cart),
+        ),
       );
 
-      await tester.pumpWidget(app);
+      expect(find.text('Your Cart'), findsOneWidget);
+      expect(find.text('Your cart is empty'), findsOneWidget);
 
-      expect(find.text('Cart View'), findsOneWidget);
-      expect(find.text('Total: £0.00'), findsOneWidget);
+      // Checkout button should not appear when empty
+      expect(find.byKey(const ValueKey('checkout_button')), findsNothing);
     });
 
-    testWidgets('displays cart items when cart has items',
+    testWidgets('Increase quantity updates UI',
         (WidgetTester tester) async {
-      final Cart cart = Cart();
-      final Sandwich sandwich = Sandwich(
-        type: SandwichType.veggieDelight,
-        isFootlong: true,
-        breadType: BreadType.white,
-      );
-      cart.add(sandwich, quantity: 2);
+      final cart = Cart();
+      final sandwich = _testSandwich();
 
-      final CartScreen cartScreen = CartScreen(cart: cart);
-      final MaterialApp app = MaterialApp(
-        home: cartScreen,
+      cart.add(sandwich);
+
+      await tester.pumpWidget(
+        MaterialApp(
+          home: CartScreen(cart: cart),
+        ),
       );
 
-      await tester.pumpWidget(app);
+      expect(find.text(sandwich.name), findsOneWidget);
 
-      expect(find.text('Cart View'), findsOneWidget);
-      expect(find.text('Veggie Delight'), findsOneWidget);
-      expect(find.text('Footlong on white bread'), findsOneWidget);
-      expect(find.text('Qty: 2 - £22.00'), findsOneWidget);
-      expect(find.text('Total: £22.00'), findsOneWidget);
+      final incKey = ValueKey('increase_${sandwich.name}');
+      final qtyKey = ValueKey('qty_${sandwich.name}');
+
+      // Quantity should start at 1
+      expect(find.byKey(qtyKey), findsOneWidget);
+      expect(find.text('1'), findsWidgets);
+
+      await tester.tap(find.byKey(incKey));
+      await tester.pump();
+
+      // Should show 2
+      expect(find.text('2'), findsWidgets);
     });
 
-    testWidgets('displays multiple cart items correctly',
+    testWidgets('Decrease quantity reduces UI count',
         (WidgetTester tester) async {
-      final Cart cart = Cart();
-      final Sandwich sandwich1 = Sandwich(
-        type: SandwichType.veggieDelight,
-        isFootlong: true,
-        breadType: BreadType.white,
-      );
-      final Sandwich sandwich2 = Sandwich(
-        type: SandwichType.chickenTeriyaki,
-        isFootlong: false,
-        breadType: BreadType.wheat,
-      );
-      cart.add(sandwich1, quantity: 1);
-      cart.add(sandwich2, quantity: 3);
+      final cart = Cart();
+      final sandwich = _testSandwich();
 
-      final CartScreen cartScreen = CartScreen(cart: cart);
-      final MaterialApp app = MaterialApp(
-        home: cartScreen,
+      cart.add(sandwich);
+      cart.add(sandwich); // quantity 2
+
+      await tester.pumpWidget(
+        MaterialApp(
+          home: CartScreen(cart: cart),
+        ),
       );
 
-      await tester.pumpWidget(app);
+      final decKey = ValueKey('decrease_${sandwich.name}');
+      final qtyKey = ValueKey('qty_${sandwich.name}');
 
-      expect(find.text('Veggie Delight'), findsOneWidget);
-      expect(find.text('Chicken Teriyaki'), findsOneWidget);
-      expect(find.text('Footlong on white bread'), findsOneWidget);
-      expect(find.text('Six-inch on wheat bread'), findsOneWidget);
-      expect(find.text('Qty: 1 - £11.00'), findsOneWidget);
-      expect(find.text('Qty: 3 - £21.00'), findsOneWidget);
-      expect(find.text('Total: £32.00'), findsOneWidget);
+      expect(find.byKey(qtyKey), findsOneWidget);
+      expect(find.text('2'), findsWidgets);
+
+      await tester.tap(find.byKey(decKey));
+      await tester.pump();
+
+      // Back to 1
+      expect(find.text('1'), findsWidgets);
     });
 
-    testWidgets('back button navigates back', (WidgetTester tester) async {
-      final Cart cart = Cart();
-      final CartScreen cartScreen = CartScreen(cart: cart);
-      final MaterialApp app = MaterialApp(
-        home: cartScreen,
-      );
-
-      await tester.pumpWidget(app);
-
-      final Finder backButtonFinder =
-          find.widgetWithText(StyledButton, 'Back to Order');
-      expect(backButtonFinder, findsOneWidget);
-
-      final StyledButton backButton =
-          tester.widget<StyledButton>(backButtonFinder);
-      expect(backButton.onPressed, isNotNull);
-    });
-
-    testWidgets('displays logo in app bar', (WidgetTester tester) async {
-      final Cart cart = Cart();
-      final CartScreen cartScreen = CartScreen(cart: cart);
-      final MaterialApp app = MaterialApp(
-        home: cartScreen,
-      );
-
-      await tester.pumpWidget(app);
-
-      final appBarFinder = find.byType(AppBar);
-      expect(appBarFinder, findsOneWidget);
-
-      final appBarImagesFinder = find.descendant(
-        of: appBarFinder,
-        matching: find.byType(Image),
-      );
-      expect(appBarImagesFinder, findsOneWidget);
-
-      final Image logoImage = tester.widget(appBarImagesFinder);
-      expect(
-          (logoImage.image as AssetImage).assetName, 'assets/images/logo.png');
-    });
-
-    testWidgets('displays correct pricing for different sandwich types',
+    testWidgets('Decreasing from 1 removes item',
         (WidgetTester tester) async {
-      final Cart cart = Cart();
-      final Sandwich sandwich = Sandwich(
-        type: SandwichType.veggieDelight,
-        isFootlong: true,
-        breadType: BreadType.white,
-      );
-      cart.add(sandwich, quantity: 3);
+      final cart = Cart();
+      final sandwich = _testSandwich();
 
-      final CartScreen cartScreen = CartScreen(cart: cart);
-      final MaterialApp app = MaterialApp(
-        home: cartScreen,
+      cart.add(sandwich);
+
+      await tester.pumpWidget(
+        MaterialApp(
+          home: CartScreen(cart: cart),
+        ),
       );
 
-      await tester.pumpWidget(app);
+      final decKey = ValueKey('decrease_${sandwich.name}');
 
-      expect(find.text('Qty: 3 - £33.00'), findsOneWidget);
-      expect(find.text('Total: £33.00'), findsOneWidget);
+      await tester.tap(find.byKey(decKey));
+      await tester.pump();
+
+      // Item should be gone
+      expect(find.text(sandwich.name), findsNothing);
+      expect(find.text('Your cart is empty'), findsOneWidget);
+    });
+
+    testWidgets('Checkout button appears only when cart has items',
+        (WidgetTester tester) async {
+      final cart = Cart();
+      final sandwich = _testSandwich();
+
+      cart.add(sandwich);
+
+      await tester.pumpWidget(
+        MaterialApp(
+          home: CartScreen(cart: cart),
+        ),
+      );
+
+      expect(find.byKey(const ValueKey('checkout_button')), findsOneWidget);
+      expect(find.byKey(const ValueKey('back_to_order_button')), findsOneWidget);
     });
   });
 }
