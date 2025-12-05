@@ -10,7 +10,7 @@ import 'package:sandwich_shop/views/checkout_screen.dart';
 /// CartScreen
 /// Worksheet 6 mapping:
 /// - "Prompt-Driven Development in Practice" outcome:
-///   You implement cart modifications (increase/decrease/remove).
+///   Implement cart modifications (increase/decrease/remove).
 /// - "Navigation in Flutter":
 ///   Uses Navigator.pop to return to Order screen.
 /// - "Returning Data from a Screen":
@@ -26,60 +26,47 @@ class CartScreen extends StatefulWidget {
 
 class _CartScreenState extends State<CartScreen> {
   /// Worksheet 6 mapping:
-  /// - "From Requirements to Implementation"
-  /// - Uses the PricingRepository to compute price based on
-  ///   quantity + size (footlong vs 6-inch).
+  /// - Pricing logic lives in PricingRepository.
+  /// - Price depends on quantity + size (footlong),
+  ///   not type/bread.
   double _calculateItemPrice(Sandwich sandwich, int quantity) {
     final PricingRepository repo = PricingRepository();
     return repo.calculatePrice(
       quantity: quantity,
       isFootlong: sandwich.isFootlong,
     );
-    // Note: This matches the worksheet rule:
-    // price doesn't depend on type/bread.
   }
 
   /// Worksheet 6 mapping:
-  /// - Cart modification feature:
-  ///   "Increase Quantity"
-  /// - We update the model then call setState to refresh UI + totals.
+  /// - Cart modification: "Increase Quantity"
+  /// IMPORTANT:
+  /// - Do NOT mutate widget.cart.items directly.
+  /// - items is read-only by design.
   void _increase(Sandwich sandwich) {
     setState(() {
-      final int current = widget.cart.items[sandwich] ?? 0;
-      widget.cart.items[sandwich] = current + 1;
+      widget.cart.increase(sandwich);
     });
   }
 
   /// Worksheet 6 mapping:
-  /// - Cart modification feature:
-  ///   "Decrease Quantity"
-  /// - Edge case requirement:
-  ///   If quantity would go below 1, remove from cart.
+  /// - Cart modification: "Decrease Quantity"
+  /// - Edge case:
+  ///   If quantity would drop below 1, remove item.
+  /// IMPORTANT:
+  /// - Do NOT mutate widget.cart.items directly.
   void _decrease(Sandwich sandwich) {
     setState(() {
-      final int current = widget.cart.items[sandwich] ?? 0;
-      if (current <= 1) {
-        widget.cart.items.remove(sandwich);
-      } else {
-        widget.cart.items[sandwich] = current - 1;
-      }
+      widget.cart.decrease(sandwich);
     });
   }
 
   /// Worksheet 6 mapping:
   /// - "Returning Data from a Screen"
   /// - Demonstrates awaiting Navigator.push(...) and receiving data.
-  /// - Matches worksheet-provided integration logic:
-  ///   1) if cart empty -> SnackBar
-  ///   2) else navigate to CheckoutScreen
-  ///   3) on success:
-  ///      - clear cart
-  ///      - show confirmation SnackBar
-  ///      - pop back to Order screen
+  /// - Matches worksheet logic:
+  ///   empty cart -> SnackBar
+  ///   success -> clear + SnackBar + pop to Order
   Future<void> _navigateToCheckout() async {
-    // Worksheet 6 mapping:
-    // - "Showing Messages Across Navigation"
-    // - Shows SnackBar even if navigation changes.
     if (widget.cart.items.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
@@ -90,9 +77,6 @@ class _CartScreenState extends State<CartScreen> {
       return;
     }
 
-    // Worksheet 6 mapping:
-    // - "Basic Navigation" + "Returning Data from a Screen"
-    //   We push the checkout route and await a result.
     final result = await Navigator.push(
       context,
       MaterialPageRoute(
@@ -100,8 +84,6 @@ class _CartScreenState extends State<CartScreen> {
       ),
     );
 
-    // Worksheet 6 mapping:
-    // - Handling returned data safely with mounted check.
     if (result != null && mounted) {
       setState(() {
         widget.cart.clear();
@@ -110,9 +92,6 @@ class _CartScreenState extends State<CartScreen> {
       final String orderId = result['orderId'] as String;
       final String estimatedTime = result['estimatedTime'] as String;
 
-      // Worksheet 6 mapping:
-      // - "Showing Messages Across Navigation"
-      //   Confirmation SnackBar after checkout.
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content:
@@ -122,17 +101,13 @@ class _CartScreenState extends State<CartScreen> {
         ),
       );
 
-      // Worksheet 6 mapping:
-      // - Returns to previous screen (Order screen)
-      //   after successful checkout.
+      // Return to Order screen after successful checkout
       Navigator.pop(context);
     }
   }
 
-  /// Helper button to replace StyledButton
-  /// Worksheet 6 mapping:
-  /// - Keeps UI consistent without requiring a custom widget.
-  /// - Adds keys for easy widget testing.
+  /// Helper button to avoid depending on StyledButton.
+  /// Adds stable keys for widget tests.
   Widget _primaryButton({
     required VoidCallback onPressed,
     required IconData icon,
@@ -156,22 +131,20 @@ class _CartScreenState extends State<CartScreen> {
   }
 
   /// Builds one cart item row with:
-  /// - sandwich name
-  /// - computed item price
-  /// - quantity controls
+  /// - name
+  /// - calculated per-item price
+  /// - quantity controls with test keys
   ///
   /// Worksheet 6 mapping:
   /// - Cart modification acceptance criteria:
   ///   Each item shows quantity + "+" and "−".
-  /// - Adds stable keys for tests:
-  ///   increase_NAME, decrease_NAME, qty_NAME.
   Widget _buildCartItemRow(Sandwich sandwich, int quantity) {
     final double itemPrice = _calculateItemPrice(sandwich, quantity);
 
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
-        // Item name
+        // Name
         Expanded(
           child: Text(
             sandwich.name,
@@ -181,7 +154,7 @@ class _CartScreenState extends State<CartScreen> {
         ),
         const SizedBox(width: 8),
 
-        // Per-item price based on pricing repo rules
+        // Per-item price based on repo rules
         Text(
           '£${itemPrice.toStringAsFixed(2)}',
           style: normalText,
@@ -218,13 +191,11 @@ class _CartScreenState extends State<CartScreen> {
   Widget build(BuildContext context) {
     final List<Widget> columnChildren = [];
 
-    // Title
     columnChildren.add(const Text('Your Cart', style: heading1));
     columnChildren.add(const SizedBox(height: 16));
 
-    // Worksheet 6 mapping:
-    // - "Edge cases"
-    // - empty cart UI state
+    /// Worksheet 6 mapping:
+    /// - Edge cases / empty state
     if (widget.cart.items.isEmpty) {
       columnChildren.add(
         const Padding(
@@ -233,9 +204,8 @@ class _CartScreenState extends State<CartScreen> {
         ),
       );
     } else {
-      // Worksheet 6 mapping:
-      // - Cart modifications UI
-      // - Iterate through items and show controls.
+      /// Worksheet 6 mapping:
+      /// - Cart modifications UI over existing CartScreen
       for (final entry in widget.cart.items.entries) {
         final Sandwich sandwich = entry.key;
         final int quantity = entry.value;
@@ -247,9 +217,9 @@ class _CartScreenState extends State<CartScreen> {
       columnChildren.add(const Divider());
       columnChildren.add(const SizedBox(height: 8));
 
-      // Worksheet 6 mapping:
-      // - Acceptance criteria:
-      //   total price updates immediately
+      /// Worksheet 6 mapping:
+      /// - Acceptance criteria:
+      ///   total price updates immediately
       columnChildren.add(
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -266,9 +236,8 @@ class _CartScreenState extends State<CartScreen> {
 
     columnChildren.add(const SizedBox(height: 24));
 
-    // Worksheet 6 mapping:
-    // - "Returning Data from a Screen"
-    // - Checkout button only if cart has items.
+    /// Worksheet 6 mapping:
+    /// - Returning data with checkout
     if (widget.cart.items.isNotEmpty) {
       columnChildren.add(
         _primaryButton(
@@ -282,9 +251,8 @@ class _CartScreenState extends State<CartScreen> {
       columnChildren.add(const SizedBox(height: 12));
     }
 
-    // Worksheet 6 mapping:
-    // - "Basic Navigation"
-    // - returns to Order screen
+    /// Worksheet 6 mapping:
+    /// - Basic navigation back to order screen
     columnChildren.add(
       _primaryButton(
         key: const ValueKey('back_to_order_button'),
