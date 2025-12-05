@@ -1,24 +1,39 @@
 import 'package:flutter/material.dart';
 import 'package:sandwich_shop/views/app_styles.dart';
 
+/// AppDrawer
+/// Worksheet 6 mapping:
+/// - Exercise 2: Add a Drawer menu for navigation.
+/// - Reduce redundancy by reusing this widget across all screens.
+///
+/// Notes:
+/// - Uses named routes:
+///   '/', '/cart', '/profile', '/about'
+/// - Your real Cart flow still should be opened from OrderScreen
+///   to pass the live Cart instance.
+///   This drawer route to '/cart' is mainly for navigation structure/demo/tests.
 class AppDrawer extends StatelessWidget {
   const AppDrawer({super.key});
 
-  Widget _tile({
+  Widget _navTile({
     required BuildContext context,
     required IconData icon,
     required String label,
     required String route,
-    Key? key,
+    required Key key,
   }) {
     return ListTile(
       key: key,
       leading: Icon(icon),
       title: Text(label, style: normalText),
       onTap: () {
-        Navigator.pop(context); // close drawer
-        // Avoid stacking duplicates of same page
-        if (ModalRoute.of(context)?.settings.name != route) {
+        // Close the drawer first
+        Navigator.pop(context);
+
+        final String? current = ModalRoute.of(context)?.settings.name;
+
+        // Avoid pushing the same named route repeatedly
+        if (current != route) {
           Navigator.pushNamed(context, route);
         }
       },
@@ -38,28 +53,28 @@ class AppDrawer extends StatelessWidget {
             ),
             const Divider(),
 
-            _tile(
+            _navTile(
               context: context,
               icon: Icons.home,
               label: 'Order',
               route: '/',
               key: const ValueKey('drawer_order'),
             ),
-            _tile(
+            _navTile(
               context: context,
               icon: Icons.shopping_cart,
               label: 'Cart',
               route: '/cart',
               key: const ValueKey('drawer_cart'),
             ),
-            _tile(
+            _navTile(
               context: context,
               icon: Icons.person,
               label: 'Profile',
               route: '/profile',
               key: const ValueKey('drawer_profile'),
             ),
-            _tile(
+            _navTile(
               context: context,
               icon: Icons.info,
               label: 'About',
