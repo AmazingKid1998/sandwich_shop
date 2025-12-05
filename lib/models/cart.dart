@@ -25,6 +25,23 @@ class Cart {
       }
     }
   }
+    void increase(Sandwich sandwich) {
+    add(sandwich);
+  }
+
+  void decrease(Sandwich sandwich) {
+    // If you already have a remove that decrements, use it.
+    // Otherwise implement safe logic here:
+    if (!items.containsKey(sandwich)) return;
+
+    final int current = items[sandwich] ?? 0;
+    if (current <= 1) {
+      items.remove(sandwich);
+    } else {
+      items[sandwich] = current - 1;
+    }
+  }
+
 
   void clear() {
     _items.clear();
