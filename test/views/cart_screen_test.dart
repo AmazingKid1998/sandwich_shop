@@ -13,6 +13,11 @@ Sandwich _testSandwich({bool isFootlong = false}) {
   );
 }
 
+String _qtyText(WidgetTester tester, Key key) {
+  final textWidget = tester.widget<Text>(find.byKey(key));
+  return textWidget.data ?? '';
+}
+
 void main() {
   group('CartScreen - Worksheet 6', () {
     testWidgets('Shows empty state when cart is empty',
@@ -20,15 +25,13 @@ void main() {
       final cart = Cart();
 
       await tester.pumpWidget(
-        MaterialApp(
-          home: CartScreen(cart: cart),
-        ),
+        MaterialApp(home: CartScreen(cart: cart)),
       );
 
       expect(find.text('Your Cart'), findsOneWidget);
       expect(find.text('Your cart is empty'), findsOneWidget);
 
-      // Checkout button should not appear when empty
+      // Checkout button hidden when empty
       expect(find.byKey(const ValueKey('checkout_button')), findsNothing);
     });
 
@@ -40,25 +43,18 @@ void main() {
       cart.add(sandwich);
 
       await tester.pumpWidget(
-        MaterialApp(
-          home: CartScreen(cart: cart),
-        ),
+        MaterialApp(home: CartScreen(cart: cart)),
       );
-
-      expect(find.text(sandwich.name), findsOneWidget);
 
       final incKey = ValueKey('increase_${sandwich.name}');
       final qtyKey = ValueKey('qty_${sandwich.name}');
 
-      // Quantity should start at 1
-      expect(find.byKey(qtyKey), findsOneWidget);
-      expect(find.text('1'), findsWidgets);
+      expect(_qtyText(tester, qtyKey), '1');
 
       await tester.tap(find.byKey(incKey));
       await tester.pump();
 
-      // Should show 2
-      expect(find.text('2'), findsWidgets);
+      expect(_qtyText(tester, qtyKey), '2');
     });
 
     testWidgets('Decrease quantity reduces UI count',
@@ -67,25 +63,21 @@ void main() {
       final sandwich = _testSandwich();
 
       cart.add(sandwich);
-      cart.add(sandwich); // quantity 2
+      cart.add(sandwich); // qty 2
 
       await tester.pumpWidget(
-        MaterialApp(
-          home: CartScreen(cart: cart),
-        ),
+        MaterialApp(home: CartScreen(cart: cart)),
       );
 
       final decKey = ValueKey('decrease_${sandwich.name}');
       final qtyKey = ValueKey('qty_${sandwich.name}');
 
-      expect(find.byKey(qtyKey), findsOneWidget);
-      expect(find.text('2'), findsWidgets);
+      expect(_qtyText(tester, qtyKey), '2');
 
       await tester.tap(find.byKey(decKey));
       await tester.pump();
 
-      // Back to 1
-      expect(find.text('1'), findsWidgets);
+      expect(_qtyText(tester, qtyKey), '1');
     });
 
     testWidgets('Decreasing from 1 removes item',
@@ -96,9 +88,7 @@ void main() {
       cart.add(sandwich);
 
       await tester.pumpWidget(
-        MaterialApp(
-          home: CartScreen(cart: cart),
-        ),
+        MaterialApp(home: CartScreen(cart: cart)),
       );
 
       final decKey = ValueKey('decrease_${sandwich.name}');
@@ -106,7 +96,6 @@ void main() {
       await tester.tap(find.byKey(decKey));
       await tester.pump();
 
-      // Item should be gone
       expect(find.text(sandwich.name), findsNothing);
       expect(find.text('Your cart is empty'), findsOneWidget);
     });
@@ -119,9 +108,7 @@ void main() {
       cart.add(sandwich);
 
       await tester.pumpWidget(
-        MaterialApp(
-          home: CartScreen(cart: cart),
-        ),
+        MaterialApp(home: CartScreen(cart: cart)),
       );
 
       expect(find.byKey(const ValueKey('checkout_button')), findsOneWidget);

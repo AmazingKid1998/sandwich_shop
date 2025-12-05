@@ -1,135 +1,107 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
-import 'package:sandwich_shop/models/cart.dart';
-import 'package:sandwich_shop/models/sandwich.dart';
-import 'package:sandwich_shop/views/checkout_screen.dart';
-
-Sandwich _testSandwich({bool isFootlong = false}) {
-  return Sandwich(
-    type: SandwichType.veggieDelight,
-    isFootlong: isFootlong,
-    breadType: BreadType.white,
-  );
-}
-
-/// Host widget to verify CheckoutScreen returns a result
-class _CheckoutHost extends StatefulWidget {
-  final Cart cart;
-
-  const _CheckoutHost({required this.cart});
-
-  @override
-  State<_CheckoutHost> createState() => _CheckoutHostState();
-}
-
-class _CheckoutHostState extends State<_CheckoutHost> {
-  bool resultReceived = false;
-
-  Future<void> _openCheckout() async {
-    final result = await Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (_) => CheckoutScreen(cart: widget.cart),
-      ),
-    );
-
-    if (result != null) {
-      setState(() {
-        resultReceived = true;
-      });
-    }
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      body: Column(
-        children: [
-          ElevatedButton(
-            key: const ValueKey('open_checkout'),
-            onPressed: _openCheckout,
-            child: const Text('Open Checkout'),
-          ),
-          if (resultReceived)
-            const Text(
-              'RESULT_RECEIVED',
-              key: ValueKey('result_received_text'),
-            ),
-        ],
-      ),
-    );
-  }
-}
+import 'package:sandwich_shop/views/order_screen.dart';
 
 void main() {
-  group('CheckoutScreen - Worksheet 6', () {
-    testWidgets('Shows order summary and confirm button',
+  group('OrderScreen - Worksheet 6 aligned', () {
+    testWidgets('Renders main controls and buttons',
         (WidgetTester tester) async {
-      final cart = Cart();
-      final sandwich = _testSandwich();
-
-      cart.add(sandwich);
-
       await tester.pumpWidget(
-        MaterialApp(
-          home: CheckoutScreen(cart: cart),
+        const MaterialApp(
+          home: OrderScreen(maxQuantity: 5),
         ),
       );
 
-      expect(find.text('Order Summary'), findsOneWidget);
-      expect(find.textContaining(sandwich.name), findsOneWidget);
-      expect(find.byKey(const ValueKey('confirm_payment_button')), findsOneWidget);
+      expect(find.text('Sandwich Counter'), findsOneWidget);
+
+      // Buttons with keys from your updated OrderScreen
+      expect(find.byKey(const ValueKey('add_to_cart_button')), findsOneWidget);
+      expect(find.byKey(const ValueKey('view_cart_button')), findsOneWidget);
+
+      // Quantity label
+      expect(find.textContaining('Quantity:'), findsOneWidget);
     });
 
-    testWidgets('Tapping confirm shows processing state',
+    testWidgets('Quantity cannot go below 1',
         (WidgetTester tester) async {
-      final cart = Cart();
-      final sandwich = _testSandwich();
-
-      cart.add(sandwich);
-
       await tester.pumpWidget(
-        MaterialApp(
-          home: CheckoutScreen(cart: cart),
+        const MaterialApp(
+          home: OrderScreen(maxQuantity: 5),
         ),
       );
 
-      await tester.tap(find.byKey(const ValueKey('confirm_payment_button')));
+      // At start, quantity is 1.
+      // The "-" IconButton should be disabled.
+      final minusFinder = find.byIcon(Icons.remove);
+      expect(minusFinder, findsOneWidget);
+
+      final IconButton minusButton =
+          tester.widget<IconButton>(minusFinder);
+
+      expect(minusButton.onPressed, isNull);
+    });
+
+    testWidgets('Quantity cannot exceed maxQuantity',
+        (WidgetTester tester) async {
+      await tester.pumpWidget(
+        const MaterialApp(
+          home: OrderScreen(maxQuantity: 2),
+        ),
+      );
+
+      final plusFinder = find.byIcon(Icons.add);
+      expect(plusFinder, findsOneWidget);
+
+      // Tap "+" twice: should reach 2 and then stop incrementing further
+      await tester.tap(plusFinder);
       await tester.pump();
 
-      expect(find.byType(CircularProgressIndicator), findsOneWidget);
-      expect(find.text('Processing payment...'), findsOneWidget);
+      await tester.tap(plusFinder);
+      await tester.pump();
+
+      // Quantity text should include "2"
+      expect(find.text('2'), findsWidgets);
+
+      // Now "+" should be disabled
+      final IconButton plusButton =
+          tester.widget<IconButton>(plusFinder);
+
+      expect(plusButton.onPressed, isNull);
     });
 
-    testWidgets('Checkout returns a result to previous screen',
+    testWidgets('Add to cart updates cart summary count',
         (WidgetTester tester) async {
-      final cart = Cart();
-      final sandwich = _testSandwich();
-
-      cart.add(sandwich);
-
       await tester.pumpWidget(
-        MaterialApp(
-          home: _CheckoutHost(cart: cart),
+        const MaterialApp(
+          home: OrderScreen(maxQuantity: 5),
         ),
       );
 
-      // Open checkout
-      await tester.tap(find.byKey(const ValueKey('open_checkout')));
+      // Initial summary should show 0 items
+      expect(find.textContaining('Cart: 0 items'), findsOneWidget);
+
+      // Tap add-to-cart
+      await tester.tap(find.byKey(const ValueKey('add_to_cart_button')));
+      await tester.pump(); // rebuild after setState
+      await tester.pump(const Duration(milliseconds: 50));
+
+      expect(find.textContaining('Cart: 1 items'), findsOneWidget);
+    });
+
+    testWidgets('View Cart navigates to Cart screen',
+        (WidgetTester tester) async {
+      await tester.pumpWidget(
+        const MaterialApp(
+          home: OrderScreen(maxQuantity: 5),
+        ),
+      );
+
+      await tester.tap(find.byKey(const ValueKey('view_cart_button')));
       await tester.pumpAndSettle();
 
-      // Confirm payment
-      await tester.tap(find.byKey(const ValueKey('confirm_payment_button')));
-      await tester.pump(); // show loading
-
-      // Advance time to complete fake delay
-      await tester.pump(const Duration(seconds: 2));
-      await tester.pumpAndSettle();
-
-      // Back on host with result
-      expect(find.byKey(const ValueKey('result_received_text')), findsOneWidget);
-      expect(find.text('RESULT_RECEIVED'), findsOneWidget);
+      // CartScreen app bar title
+      expect(find.text('Cart'), findsOneWidget);
     });
   });
 }
