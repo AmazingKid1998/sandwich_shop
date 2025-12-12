@@ -65,12 +65,16 @@ void main() {
         ChangeNotifierProvider<Cart>.value(
           value: cart,
           child: MaterialApp(
-            home: Scaffold(
-              appBar: buildStandardAppBar(
-                context: tester.element(find.byType(Scaffold)),
-                title: 'Test Title',
-              ),
-              body: const SizedBox.shrink(),
+            home: Builder(
+              builder: (BuildContext context) {
+                return Scaffold(
+                  appBar: buildStandardAppBar(
+                    context: context,
+                    title: 'Test Title',
+                  ),
+                  body: const SizedBox.shrink(),
+                );
+              },
             ),
           ),
         ),
@@ -84,7 +88,7 @@ void main() {
       // Logo image is in the AppBar leading
       expect(find.byType(Image), findsOneWidget);
 
-      // Cart icon + count
+      // Cart icon + count in AppBar
       expect(find.byIcon(Icons.shopping_cart), findsOneWidget);
       expect(
         find.descendant(
